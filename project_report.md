@@ -122,42 +122,19 @@ Hệ thống được thiết kế theo tư duy Module hóa (Object-Oriented Pro
 3. **Đánh giá:** Module Orchestrator sẽ thu thập mọi giao dịch, so sánh với nhãn thật (Ground Truth) và in ra các Metrics tóm tắt.
 
 ## 5. Kết quả Thực nghiệm & Thảo luận
-Hệ thống đã chạy thực nghiệm trên thị trường S&P 500 mô phỏng và thu được kết quả vô cùng ấn tượng. Những kết quả này đã được biểu diễn trực quan qua bộ 4 biểu đồ trong file `paper_figures.ipynb`.
+Hệ thống đã chạy thực nghiệm trên thị trường mô phỏng (S&P 500 và Crypto). Để dễ hình dung cách hệ thống tính toán thực tế, dưới đây là các thông số trích xuất trực tiếp từ kết quả chạy thực nghiệm (trên tập dữ liệu Test Set với 431 ngày giao dịch).
 
-![Training Convergence](/home/duymanh/.gemini/antigravity/brain/cc84390a-b30c-4d3e-890d-a47950b2e82c/fig1_training_convergence.png)
+### 5.1. Phân tích Cảm xúc & Truy xuất Thông tin (Lớp 1: RAG & FinBERT)
+Độ trung thực của hệ thống sinh ngữ cảnh (RAG Faithfulness) đạt tuyệt đối $1.0$, triệt tiêu hiện tượng AI tự bịa đặt thông tin.
 
-### 5.1. Khả năng Bảo vệ An toàn Vốn (Cơ chế Từ chối - Reject Option)
-![Risk Aware Prediction](/home/duymanh/.gemini/antigravity/brain/cc84390a-b30c-4d3e-890d-a47950b2e82c/fig2_risk_aware_prediction.png)
-
-Trong giai đoạn "Market Crash", độ bất định (epistemic uncertainty) của mô hình LSTM phình to bất thường do dữ liệu bị trượt phân phối (Out-of-Distribution).
-- Hệ thống đã nhận diện thành công sự nguy hiểm này và **tự động từ chối 71 mẫu** giao dịch (Rejection Rate = 16.47%). 
-- Tính toán PICP (Tỉ lệ bao phủ khoảng dự đoán 95%) đạt $61.02\%$, chứng minh dải cảnh báo rủi ro (Confidence Interval) của hệ thống đủ nhạy để hứng chịu biến động.
-
-### 5.2. Hiệu năng Dự báo (Cải thiện RMSE)
-![RMSE Comparison](/home/duymanh/.gemini/antigravity/brain/cc84390a-b30c-4d3e-890d-a47950b2e82c/fig3_rmse_comparison.png)
-
-Hệ thống chứng minh rằng, việc "biết sợ" mang lại phần thưởng lớn:
-- Khi ép mô hình dự đoán toàn bộ 100% tập dữ liệu (kể cả lúc thị trường sập) như các hệ thống cũ, sai số **RMSE cơ sở là 1.9306**.
-- Với hệ thống đề xuất, nhờ loại bỏ đi 71 quyết định rủi ro, sai số trên những mẫu được thực thi (Execute Only) giảm mạnh xuống còn **1.7282**.
-- $\rightarrow$ Sự đánh đổi này mang lại **mức cải thiện RMSE lên tới 10.48%**.
-
-### 5.3. Tính Minh bạch và Giải thích (Explainability)
-![Explainability](/home/duymanh/.gemini/antigravity/brain/cc84390a-b30c-4d3e-890d-a47950b2e82c/fig4_explainability.png)
-
-- Độ trung thực của hệ thống sinh ngữ cảnh (RAG Faithfulness) đạt tuyệt đối $1.0$, triệt tiêu hiện tượng AI tự bịa đặt thông tin.
-- Phân tích SHAP (Lớp 3) cho thấy đặc trưng `return_1d` có sức mạnh chi phối lớn nhất (mean |SHAP| = 0.6360). Kết quả này hoàn toàn nhất quán (consistent) với Đồ thị Causal DAG của Lý thuyết Tài chính (rằng lợi nhuận ngày hôm qua tác động trực tiếp lên giá hôm nay), chứng minh mô hình **không hề học vẹt**.
-
-## 6. Bảng Thông số Thực nghiệm chi tiết (Experimental Metrics per Layer)
-Để dễ hình dung cách hệ thống tính toán thực tế, dưới đây là các thông số trích xuất trực tiếp từ kết quả chạy thực nghiệm (trên tập dữ liệu Test Set với 431 ngày giao dịch).
-
-### Bảng 1. Lớp 1: RAG & Sentiment Analysis
 | Thông số (Parameter) | Giá trị Thực nghiệm (Value) | Ý nghĩa (Description) |
 |---|---|---|
 | **Số tài liệu truy xuất (Top-K)** | 5 | Số lượng tin tức/tài liệu liên quan nhất được RAG kéo về. |
 | **Độ trung thực (Faithfulness)** | 1.0000 | Tỷ lệ thông tin không bị ảo giác (100% dựa trên căn cứ có thật). |
 | **Biên độ Sentiment ($S_t$)** | [-1.0, 1.0] | Phản ánh tâm lý thị trường (Vd: Tin tức tốt $\rightarrow$ +0.85, Tin xấu $\rightarrow$ -0.92). |
+### 5.2. Khả năng Bảo vệ An toàn Vốn & Định lượng Rủi ro (Lớp 2: MC Dropout)
+Trong giai đoạn "Market Crash", độ bất định (epistemic uncertainty) của mô hình LSTM phình to. Dưới đây là cách mô hình phản ứng:
 
-### Bảng 2. Lớp 2: Risk-Aware Predictor (MC Dropout)
 | Thông số (Parameter) | Giá trị Thực nghiệm (Value) | Ý nghĩa (Description) |
 |---|---|---|
 | **Số lần lấy mẫu MC ($T$)** | 50 | Số lượt chạy qua mạng Dropout để đo lường độ bất định (epistemic uncertainty). |
@@ -166,11 +143,19 @@ Hệ thống chứng minh rằng, việc "biết sợ" mang lại phần thưở
 | **Số lệnh bị TỪ CHỐI (Reject)** | 71 | Số quyết định bị hệ thống tự động chặn lại do rủi ro quá lớn. |
 | **Tỷ lệ từ chối (Rejection Rate)** | 16.47% | Phần trăm số ngày ngưng giao dịch trên tổng số ngày Test. |
 | **Độ bao phủ rủi ro (PICP)** | 61.02% | Tỷ lệ giá trị thực tế lọt vào trong khoảng tin cậy 95% của mô hình. |
+
+### 5.3. Hiệu năng Dự báo (Cải thiện RMSE)
+Hệ thống chứng minh rằng, việc "biết sợ" (Từ chối rủi ro) mang lại phần thưởng lớn về độ chính xác dự báo:
+
+| Thông số (Parameter) | Giá trị Thực nghiệm (Value) | Ý nghĩa (Description) |
+|---|---|---|
 | **RMSE (Baseline)** | 1.9306 | Sai số của mô hình truyền thống (bị ép phải dự đoán mù quáng trong mọi hoàn cảnh). |
 | **RMSE (Đề xuất - Execute Only)** | **1.7282** | Sai số của hệ thống đề xuất (khi chỉ ra quyết định ở vùng an toàn). |
 | **Mức độ cải thiện (Improvement)** | **+ 10.48%** | Tỷ lệ giảm thiểu sai số dự đoán nhờ kích hoạt cơ chế Reject Option. |
 
-### Bảng 3. Lớp 3: Causal XAI (SHAP Feature Importance)
+### 5.4. Tính Minh bạch và Giải thích (Lớp 3: Causal XAI)
+Phân tích SHAP và Đồ thị Nhân quả (Causal DAG) cho thấy mô hình không học vẹt mà dựa trên các yếu tố logic từ Lý thuyết tài chính:
+
 | Tên Đặc trưng (Feature) | Giá trị \|SHAP\| trung bình | Xếp hạng & Tác động Nhân quả (Causal Impact) |
 |---|---|---|
 | **return_1d** (Lợi nhuận 1 ngày) | 0.6360 | Quan trọng nhất (Top 1) - Tác động trực tiếp (Direct Edge) lên giá mục tiêu. |
@@ -179,5 +164,5 @@ Hệ thống chứng minh rằng, việc "biết sợ" mang lại phần thưở
 | **volume_norm** (Khối lượng GD) | 0.1500 | Top 4 - Đại diện cho thanh khoản và dòng tiền. |
 | **sma_10** (Trung bình động 10 ngày)| 0.0890 | Top 5 - Thể hiện động lượng ngắn hạn (Tác động thấp nhất). |
 
-## 7. Tổng kết
+## 6. Tổng kết
 Dự án đã xây dựng thành công một Framework "Trustworthy AI" (AI Đáng tin cậy) đúng nghĩa. Thay vì cố gắng dự đoán mù quáng, hệ thống biết khi nào nên "nói không" để bảo vệ vốn của nhà đầu tư. Cấu trúc mã nguồn Clean Code chuẩn SOLID, đi kèm các công cụ trực quan hóa (Visualization) chuẩn Q1 và mã LaTeX hoàn chỉnh khiến dự án này đặc biệt phù hợp cho mục đích nghiên cứu học thuật sâu sắc.
